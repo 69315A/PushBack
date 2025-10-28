@@ -160,18 +160,15 @@ void opcontrol() {
         } else if (controller.get_digital(DIGITAL_L2)){
             Lintake.move_velocity(12000);
             Uintake.move_velocity(12000);
+        } else if (controller.get_digital(DIGITAL_R1)) {
+            Lintake.move_velocity(-12000); 
+            Uintake.move_velocity(0);
+        } else if (controller.get_digital(DIGITAL_R2)){
+            Lintake.move_velocity(12000);
+            Uintake.move_velocity(0);
         } else {
             Lintake.move_velocity(0);
             Uintake.move_velocity(0);
-        }
-
-        // lower intake
-        if (controller.get_digital(DIGITAL_R1)){
-            Lintake.move_velocity(12000);         
-        } else if (controller.get_digital(DIGITAL_R2)){
-            Lintake.move_velocity(-12000); 
-        } else {
-            Lintake.move_velocity(0);
         }
 
         // 
