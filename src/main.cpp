@@ -1,5 +1,7 @@
 #include "main.h"
 #include "lemlib/api.hpp" // IWYU pragma: keep
+#include "pros/misc.h"
+#include "pros/motor_group.hpp"
 /**
  * A callback function for LLEMU's center button.
  *
@@ -17,9 +19,18 @@ void on_center_button() {
 }
 
 
-// chassis constructors
-pros::MotorGroup leftMotors{{18, 19, 20}, pros::MotorGearset::blue};
-pros::MotorGroup rightMotors{{-11, -12, -13}, pros::MotorGearset::blue};
+// chassis
+pros::MotorGroup leftMotors{{10, 9,8}, pros::MotorGearset::blue};
+pros::MotorGroup rightMotors{{-1, -3, -2}, pros::MotorGearset::blue};
+
+// motors
+pros::Motor Lintake(13, pros::MotorGearset::blue);
+pros::Motor Uintake(-4, pros::MotorGearset::blue);  
+// pros::MotorGroup bIntake{{13, -4}, pros::MotorGearset::blue};
+
+// pnuematics
+pros::adi::Pneumatics midGoal('E', false);
+pros::adi::Pneumatics mloader('B', false);
 
 // drivetrain settings
 lemlib::Drivetrain drivetrain(&leftMotors, // left motor group
@@ -32,32 +43,6 @@ lemlib::Drivetrain drivetrain(&leftMotors, // left motor group
 
 // controller constructor
 pros::Controller controller(pros::E_CONTROLLER_MASTER);
-
-/* previous PID's
-// lateral PID controller
-lemlib::ControllerSettings lateral_controller(9, // proportional gain (kP)
-                                              0, // integral gain (kI)
-                                              30, // derivative gain (kD)
-                                              0, // anti windup
-                                              0, // small error range, in inches
-                                              0, // small error range timeout, in milliseconds
-                                              0, // large error range, in inches
-                                              0, // large error range timeout, in milliseconds
-                                              0 // maximum acceleration (slew)
-);
-
-// angular PID controller
-lemlib::ControllerSettings angular_controller(2, // proportional gain (kP)
-                                              0, // integral gain (kI)
-                                              11, // derivative gain (kD)
-                                              0, // anti windup
-                                              0, // small error range, in inches
-                                              0, // small error range timeout, in milliseconds
-                                              0, // large error range, in inches
-                                              0, // large error range timeout, in milliseconds
-                                              0 // maximum acceleration (slew)
-); 
-*/
 
 // lateral PID controller
 lemlib::ControllerSettings lateral_controller(10, // proportional gain (kP)
@@ -157,6 +142,9 @@ void autonomous() {}
  */
 void opcontrol() {
 	
+    bool mLoaderToggle = false;
+    bool midGoalToggle = false;
+
 	while (true) {
 		
 		// get joystick positions
@@ -164,6 +152,50 @@ void opcontrol() {
         int rightX = controller.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X);
         // move the chassis with curvature drive
         chassis.arcade(-leftY, -rightX); 
+
+        // both intakes
+        if (controller.get_digital(DIGITAL_L1)){
+            Lintake.move_velocity(-12000);
+            Uintake.move_velocity(-12000);        
+        } else if (controller.get_digital(DIGITAL_L2)){
+            Lintake.move_velocity(12000);
+            Uintake.move_velocity(12000);
+        } else {
+            Lintake.move_velocity(0);
+            Uintake.move_velocity(0);
+        }
+
+        // lower intake
+        if (controller.get_digital(DIGITAL_R1)){
+            Lintake.move_velocity(12000);         
+        } else if (controller.get_digital(DIGITAL_R2)){
+            Lintake.move_velocity(-12000); 
+        } else {
+            Lintake.move_velocity(0);
+        }
+
+        // 
+        if(controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_A)){
+            if(mLoaderToggle == false){
+                mloader.extend();
+                mLoaderToggle = true;
+            } else {
+                mloader.retract();
+                mLoaderToggle = false;
+            }
+        }
+
+        // middle goal pneumatics
+        if(controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_X)){
+            if(midGoalToggle == false){
+                midGoal.extend();
+                midGoalToggle = true;
+            } else {
+                midGoal.retract();
+                midGoalToggle = false;
+            }
+        }
+        
 
 	} 
     
