@@ -18,7 +18,6 @@ void on_center_button() {
 	}
 }
 
-
 // chassis
 pros::MotorGroup leftMotors{{10, 9,8}, pros::MotorGearset::blue};
 pros::MotorGroup rightMotors{{-1, -3, -2}, pros::MotorGearset::blue};
@@ -31,6 +30,7 @@ pros::Motor Uintake(-4, pros::MotorGearset::blue);
 // pnuematics
 pros::adi::Pneumatics midGoal('E', false);
 pros::adi::Pneumatics mloader('B', false);
+
 
 // drivetrain settings
 lemlib::Drivetrain drivetrain(&leftMotors, // left motor group
@@ -171,7 +171,7 @@ void opcontrol() {
             Uintake.move_velocity(0);
         }
 
-        // 
+        // loader pneumatics
         if(controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_A)){
             if(mLoaderToggle == false){
                 mloader.extend();
@@ -193,7 +193,10 @@ void opcontrol() {
             }
         }
         
-
-	} 
-    
+        // auton testing
+        if(controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_Y)){
+            chassis.turnToHeading(285, 500);
+            // chassis.moveToPose(5, 10, 285, 4000);
+        }
+    }
 }
